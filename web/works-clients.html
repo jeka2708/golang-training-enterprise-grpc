@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ .Title}}</title>
+    <base href="localhost">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+</head>
+<body>
+<h1>{{ .Title}}</h1>
+<form method="post" id="ajax_form" action="" >
+    <input type="text" name="ClientId" placeholder="WorkerId" /><br>
+    <input type="text" name="WorkId" placeholder="ServiceId" /><br>
+    <input type="button" class="btnGeneral" data-action="create-work-clients" value="Отправить" />
+</form>
+
+{{ range .WorksClients }}
+<ul>
+    <li>Service Name : {{ .Name }}</li>
+    <li>Cost Name : {{ .Cost }}</li>
+    <li>First Name : {{ .FirstName }}</li>
+    <li>Last Name : {{ .LastName }}</li>
+    <li>Middle Name : {{ .MiddleName }}</li>
+    <li>Phone Number : {{ .PhoneNumber }}</li>
+    <li>First Name client : {{ .FirstNameC }}</li>
+    <li>Last Name client : {{ .LastNameC }}</li>
+    <li>Middle Name client : {{ .MiddleNameC }}</li>
+    <li>Phone Number client : {{ .PhoneNumberC }}</li>
+    <li>
+        <form method="post" id="delete_form">
+            <input type="hidden" name="id" value="{{ .Id}}"/><br>
+            <button class="btnGeneral" data-id="{{ .Id}}" data-action="delete-work-clients">Delete</button>
+        </form>
+    </li>
+</ul>
+{{ end }}
+<script src="/web/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ .Title}}</title>
+    <base href="localhost">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+</head>
+<body>
+<h1>{{ .Title}}</h1>
+<form method="post" id="ajax_form" action="" >
+    <input type="text" name="WorkerId" placeholder="WorkerId" /><br>
+    <input type="text" name="ServiceId" placeholder="ServiceId" /><br>
+    <input type="button" class="btnGeneral" data-action="create-work" value="Отправить" />
+</form>
+
+{{ range .Works }}
+<ul>
+    <li>Service Name : {{ .Name }}</li>
+    <li>Cost Name : {{ .Cost }}</li>
+    <li>First Name : {{ .FirstName }}</li>
+    <li>Last Name : {{ .LastName }}</li>
+    <li>Middle Name : {{ .MiddleName }}</li>
+    <li>Phone Number : {{ .PhoneNumber }}</li>
+    <li>
+        <form method="post" id="delete_form">
+            <input type="hidden" name="id" value="{{ .Id}}"/><br>
+            <button class="btnGeneral" data-id="{{ .Id}}" data-action="delete-work">Delete</button>
+        </form>
+    </li>
+</ul>
+{{ end }}
+<script src="/web/main.js"></script>
+</body>
+</html>

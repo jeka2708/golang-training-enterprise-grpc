@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ .Title}}</title>
+    <base href="localhost">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="/web/main.css">
+</head>
+<body>
+<h1>{{ .Title}}</h1>
+<form method="post" id="ajax_form" action="" >
+    <input type="text" name="FirstNameC" placeholder="NAME" /><br>
+    <input type="text" name="LastNameC" placeholder="LastNameC" /><br>
+    <input type="text" name="MiddleNameC" placeholder="MiddleNameC" /><br>
+    <input type="text" name="PhoneNumberC" placeholder="YOUR PHONE" /><br>
+    <input type="button" class="btnGeneral"  data-action="create-client" value="Отправить" />
+</form>
+{{ range .Clients }}
+<ul>
+    <li>First Name : {{ .FirstNameC }}</li>
+    <li>Last Name : {{ .LastNameC }}</li>
+    <li>Middle Name : {{ .MiddleNameC }}</li>
+    <li>Phone Number : {{ .PhoneNumberC }}</li>
+    <li>
+        <form method="post" id="delete_form">
+            <input type="hidden" name="id" value="{{ .Id}}"/><br>
+            <button class="delete" data-id="{{ .Id}}">Delete</button>
+        </form>
+    </li>
+    <li>
+        <button class="show-form">Change</button>
+        <form method="post" action="" class="hide">
+            <input type="hidden" name="id" value="{{ .Id}}"/><br>
+            <input type="text" name="FirstNameC" placeholder="NAME" value="{{ .FirstNameC }}"/><br>
+            <input type="text" name="LastNameC" placeholder="LastNameC" value="{{ .LastNameC }}"/><br>
+            <input type="text" name="MiddleNameC" placeholder="MiddleNameC" value="{{ .MiddleNameC }}"/><br>
+            <input type="text" name="PhoneNumberC" placeholder="YOUR PHONE" value="{{ .PhoneNumberC }}"/><br>
+            <input type="button" class="btnGeneral"  data-action="update-client" value="Change" />
+            <button class="hide-form">Cancel</button>
+        </form>
+    </li>
+</ul>
+{{ end }}
+<script src="/web/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ .Title}}</title>
+    <base href="localhost">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+</head>
+<body>
+<h1>{{ .Title}}</h1>
+<form method="post" id="ajax_form" action="" >
+    <input type="text" name="Name" placeholder="NAME" /><br>
+    <input type="text" name="DivisionName" placeholder="Division Name" /><br>
+    <input type="button" class="btnGeneral" data-action="create-role" value="Отправить" />
+</form>
+
+{{ range .Roles }}
+<ul>
+    <li>Role Name : {{ .Name }}</li>
+    <li>Division Name : {{ .DivisionName }}</li>
+    <li>
+        <form method="post" id="delete_form">
+            <input type="hidden" name="id" value="{{ .Id}}"/><br>
+            <button class="btnGeneral" data-id="{{ .Id}}" data-action="delete-role">Delete</button>
+        </form>
+    </li>
+</ul>
+{{ end }}
+<script src="/web/main.js"></script>
+</body>
+</html>

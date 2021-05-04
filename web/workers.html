@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ .Title}}</title>
+    <base href="localhost">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+</head>
+<body>
+<h1>{{ .Title}}</h1>
+<form method="post" id="ajax_form" action="" >
+    <input type="text" name="FirstName" placeholder="NAME" /><br>
+    <input type="text" name="LastName" placeholder="LastNameC" /><br>
+    <input type="text" name="MiddleName" placeholder="MiddleNameC" /><br>
+    <input type="text" name="PhoneNumber" placeholder="Phone" /><br>
+    <input type="text" name="RoleId" placeholder="id role" /><br>
+
+    <input type="button" class="btnGeneral" data-action="create-worker" value="Отправить" />
+</form>
+
+{{ range .WorksClients }}
+<ul>
+    <li>Role Name : {{ .Name }}</li>
+    <li>First Name : {{ .FirstName }}</li>
+    <li>Last Name : {{ .LastName }}</li>
+    <li>Middle Name : {{ .MiddleName }}</li>
+    <li>Phone Number : {{ .PhoneNumber }}</li>
+    <li>
+        <form method="post" id="delete_form">
+            <input type="hidden" name="id" value="{{ .Id}}"/><br>
+            <button class="btnGeneral" data-id="{{ .Id}}" data-action="delete-worker">Delete</button>
+        </form>
+    </li>
+</ul>
+{{ end }}
+<script src="/web/main.js"></script>
+</body>
+</html>
