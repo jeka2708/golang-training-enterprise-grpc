@@ -1,0 +1,55 @@
+// you can generate go models by the following command:
+// protoc -I . divisions.proto --grpc-gateway_out . --go_out=plugins=grpc:.
+
+
+
+syntax = "proto3";
+
+option go_package = "/go_proto";
+
+package divisions;
+
+import "google/api/annotations.proto";
+
+service DivisionService {
+  rpc ReadAllDivision(ListDivisionRequest) returns (ListDivisionResponse) {
+    option(google.api.http) = {
+      get: "/api/v1/divisions"
+    };
+  }
+  rpc CreateDivision(DataDivision) returns (IdDivision) {
+    option(google.api.http) = {
+      post: "/api/v1/divisions"
+      body:"*"
+    };
+  }
+  rpc DeleteDivision(IdDivision) returns (StatusDivisionResponse) {
+    option(google.api.http) = {
+      delete: "/api/v1/divisions/{id}"
+    };
+  }
+  rpc UpdateDivision(DataDivision) returns (StatusDivisionResponse) {
+    option(google.api.http) = {
+      put: "/api/v1/divisions"
+      body: "*"
+    };
+  }
+}
+
+message DataDivision{
+  int64 Id = 1;
+  string DivisionName = 2;
+}
+
+message ListDivisionRequest {}
+
+message ListDivisionResponse {
+  repeated DataDivision data = 1;
+}
+
+message IdDivision {
+  int64 id = 1;
+}
+message StatusDivisionResponse {
+  string message = 1;
+}

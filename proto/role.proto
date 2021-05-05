@@ -1,0 +1,44 @@
+// you can generate go models by the following command:
+// protoc -I . role.proto --grpc-gateway_out . --go_out=plugins=grpc:.
+
+
+
+syntax = "proto3";
+
+option go_package = "/go_proto";
+
+package role;
+
+import "google/api/annotations.proto";
+
+service RoleService {
+  rpc ReadAllRole(ListRoleRequest) returns (ListRoleResponse) {
+    option(google.api.http) = {
+      get: "/api/v1/roles"
+    };
+  }
+  rpc DeleteRole(IdRole) returns (StatusRoleResponse) {
+    option(google.api.http) = {
+      delete: "/api/v1/roles/{id}"
+    };
+  }
+}
+
+message DataRole{
+  int64 Id = 1;
+  string Name = 2;
+  string DivisionName = 3;
+}
+
+message ListRoleRequest {}
+
+message ListRoleResponse {
+  repeated DataRole data = 1;
+}
+
+message IdRole {
+  int64 id = 1;
+}
+message StatusRoleResponse {
+  string message = 1;
+}

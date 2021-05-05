@@ -1,0 +1,56 @@
+// you can generate go models by the following command:
+// protoc -I . service.proto --grpc-gateway_out . --go_out=plugins=grpc:.
+
+
+
+syntax = "proto3";
+
+option go_package = "/go_proto";
+
+package service;
+
+import "google/api/annotations.proto";
+
+service ServiceService {
+  rpc ReadAllService(ListServiceRequest) returns (ListServiceResponse) {
+    option(google.api.http) = {
+      get: "/api/v1/services"
+    };
+  }
+  rpc CreateService(DataService) returns (IdService) {
+    option(google.api.http) = {
+      post: "/api/v1/services"
+      body:"*"
+    };
+  }
+  rpc DeleteService(IdService) returns (StatusServiceResponse) {
+    option(google.api.http) = {
+      delete: "/api/v1/services/{id}"
+    };
+  }
+  rpc UpdateService(DataService) returns (StatusServiceResponse) {
+    option(google.api.http) = {
+      put: "/api/v1/services"
+      body: "*"
+    };
+  }
+}
+
+message DataService{
+  int64 Id = 1;
+  string Name = 2;
+  int64 Cost = 3;
+}
+
+message ListServiceRequest {}
+
+message ListServiceResponse {
+  repeated DataService data = 1;
+}
+
+message IdService {
+  int64 id = 1;
+}
+message StatusServiceResponse {
+  string message = 1;
+}

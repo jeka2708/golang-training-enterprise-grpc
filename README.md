@@ -16,23 +16,24 @@
 
 |Path|Method|Description|Body example|
 |:---:|:---:|:---:|:---|
-|```/create-client```|```POST```|create new client|```{"FirstNameC":"First","LastNameC":"Last","MiddleNameC":"Middle","PhoneNumberC":"+37525333333"}```|
-|```/create-division```|```POST```|create new division|```{"DivisionName":"test"}```|
-|```/create-role```|```POST```|create new role|```{"Name":"test","DivisionName":"testD"}```|
-|```/create-service```|```POST```|create new service|```{"Name":"test","Cost":"22"}```|
-|```/create-work```|```POST```|create new work|```{"WorkerId":"2","ServiceId":"3"}```|
-|```/create-work-clients```|```POST```|create new work-clients|```{"FirstNameC":"First","LastNameC":"Last","MiddleNameC":"MiddleNameC","PhoneNumberC":"+37525333333"}```|
-|```/create-worker```|```POST```|create new worker|```{"FirstName":"First","LastName":"Last","MiddleName":"MiddleNameC","PhoneNumber":"+37525333333","RoleId":"3"}```|
-|```/delete-client```|```POST```|delete new client by id|```id```|
-|```/delete-division```|```POST```|delete new division by id|```id```|
-|```/delete-role```|```POST```|delete new role by id|```id```|
-|```/delete-service```|```POST```|delete new service by id|```id```|
-|```/delete-work```|```POST```|delete new work by id|```id```|
-|```/delete-work-clients```|```POST```|delete new work-clients by id|```id```|
-|```/delete-worker```|```POST```|delete new worker by id|```id```|
-|```/update-client```|```POST```|update client|```{"id":"1",FirstNameC":"First","LastNameC":"Last","MiddleNameC":"Middle","PhoneNumberC":"+37525333333"}```|
-|```/update-division```|```POST```|update division|```{"id":"1","DivisionName":"test"}```|
-|```/update-service```|```POST```|update service|```{"id":"1","Name":"test","Cost":"22"}```|
+|```/clients```|```POST```|create new client|```{"FirstNameC":"First","LastNameC":"Last","MiddleNameC":"Middle","PhoneNumberC":"+37525333333"}```|
+|```/divisions```|```POST```|create new division|```{"DivisionName":"test"}```|
+|```/roles```|```POST```|create new role|```{"Name":"test","DivisionName":"testD"}```|
+|```/services```|```POST```|create new service|```{"Name":"test","Cost":"22"}```|
+|```/works```|```POST```|create new work|```{"WorkerId":"2","ServiceId":"3"}```|
+|```/work-client```|```POST```|create new work-clients|```{"FirstNameC":"First","LastNameC":"Last","MiddleNameC":"MiddleNameC","PhoneNumberC":"+37525333333"}```|
+|```/workers```|```POST```|create new worker|```{"FirstName":"First","LastName":"Last","MiddleName":"MiddleNameC","PhoneNumber":"+37525333333","RoleId":"3"}```|
+
+|```/clients```|```DELETE```|delete new client by id|```id```|
+|```/divisions```|```DELETE```|delete new division by id|```id```|
+|```/roles```|```DELETE```|delete new role by id|```id```|
+|```/services```|```DELETE```|delete new service by id|```id```|
+|```/works```|```DELETE```|delete new work by id|```id```|
+|```/work-client```|```DELETE```|delete new work-clients by id|```id```|
+|```/workers```|```DELETE```|delete new worker by id|```id```|
+|```/clients```|```PUT```|update client|```{"id":"1",FirstNameC":"First","LastNameC":"Last","MiddleNameC":"Middle","PhoneNumberC":"+37525333333"}```|
+|```/divisions```|```PUT```|update division|```{"id":"1","DivisionName":"test"}```|
+|```/services```|```PUT```|update service|```{"id":"1","Name":"test","Cost":"22"}```|
 
 ## Usage
 
