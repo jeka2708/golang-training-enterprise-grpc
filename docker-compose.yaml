@@ -2,7 +2,7 @@ version: '3.3'
 
 services:
   db-enterprise:
-    image: pryby/db-enterprise:latest
+    image: pryby/db:latest
     networks:
       - enterprise-network
     environment:
@@ -15,10 +15,10 @@ services:
   backend:
     image: pryby/backend:latest
     ports:
-      - 8282:8282
+      - 8080:8080
     container_name: backend
     environment:
-      - LISTEN=0.0.0.0:8282
+      - LISTEN=0.0.0.0:8080
       - DB_USERS_HOST=db-enterprise
       - DB_USERS_PORT=5432
       - DB_USERS_USER=postgres
@@ -30,15 +30,15 @@ services:
     networks:
       - enterprise-network
   gateway:
-    image: pryby/gateway:latest
+    image: pryby/client:latest
     ports:
-      - 8383:8383
+      - 8081:8081
     container_name: gateway
     depends_on:
       - backend
     environment:
-      - backend=backend:8282
-      - LISTEN=0.0.0.0:8383
+      - backend=backend:8080
+      - LISTEN=0.0.0.0:8081
     networks:
       - enterprise-network
 

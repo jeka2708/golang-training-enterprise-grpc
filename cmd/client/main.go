@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	conn, err := grpc.Dial("localhost:8282", grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.Dial("localhost:8080", grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -18,5 +18,5 @@ func main() {
 
 	grpcMux := runtime.NewServeMux()
 	api.RegisterAllServiceHandler(context.Background(), grpcMux, conn)
-	log.Fatal(http.ListenAndServe("localhost:8383", grpcMux))
+	log.Fatal(http.ListenAndServe("localhost:8081", grpcMux))
 }

@@ -1,5 +1,3 @@
-FROM alpine:3.10.1
-RUN mkdir -p chmod 666 /app
-WORKDIR /app
-COPY ./cmd/client/bin /app
-ENTRYPOINT chmod +x client
+FROM postgres:alpine
+COPY ./db-structure/script.sql /docker-entrypoint-initdb.d/init.sql
+EXPOSE 5432
