@@ -7,10 +7,25 @@ import (
 	"google.golang.org/grpc"
 	"log"
 	"net/http"
+	"os"
 )
 
+var (
+	serverAddr = os.Getenv("backend")
+	listen     = os.Getenv("LISTEN")
+)
+
+func init() {
+	if serverAddr == "" {
+		serverAddr = "localhost:8080"
+	}
+	if listen == "" {
+		listen = "localhost:8081"
+	}
+}
+
 func main() {
-	conn, err := grpc.Dial("localhost:8080", grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -18,5 +33,5 @@ func main() {
 
 	grpcMux := runtime.NewServeMux()
 	api.RegisterAllServiceHandler(context.Background(), grpcMux, conn)
-	log.Fatal(http.ListenAndServe("localhost:8081", grpcMux))
+	log.Fatal(http.ListenAndServe(listen, grpcMux))
 }
