@@ -18,7 +18,9 @@ var (
 )
 
 func main() {
-	conn, error := db.GetConnection(host, "5432", user, dbname, password, sslmode)
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	ctx, cancel = context.WithTimeout(ctx, time.Second*30)
 	if error != nil {
 		log.Println(error)
 	}
@@ -33,5 +35,20 @@ func main() {
 
 	if err = server.Serve(listener); err != nil {
 		log.Fatal(err)
+	}
+}
+func connectToDbWithTimeout(ctx context.Context) (*gorm.DB, error) {
+	for {
+		time.Sleep(2 * time.Second)
+		conn, error := db.GetConnection(host, "5432", user, dbname, password, sslmode)
+		if err == nil {
+			return conn, nil
+		}
+		select {
+		case <-ctx.Done():
+			return nil, err
+		default:
+			continue
+		}
 	}
 }
