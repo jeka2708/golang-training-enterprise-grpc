@@ -34,10 +34,13 @@
 |```/api/v1/divisions```|```PUT```|update division|```{"id":"1","DivisionName":"test"}```|
 |```/api/v1/services```|```PUT```|update service|```{"id":"1","Name":"test","Cost":"22"}```|
 
-## Usage
+# Protobuf
 
-1. Run server on port ```8080```
+1. To generate go code from brotobuf type this command below  in terminal while you're in `proto`:
+   `protoc -I proto *.proto --grpc-gateway_out proto --go_out=plugins=grpc:.`
+
+## Usage
 
 > ```docker-compose up```
 
-2. Open URL ```http://localhost:8081```
+Open URL ```http://localhost:8081```
