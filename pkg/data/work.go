@@ -2,6 +2,7 @@ package data
 
 import (
 	"fmt"
+	"gorm.io/gorm"
 )
 
 type Work struct {
@@ -22,10 +23,18 @@ type ResultWork struct {
 	PhoneNumber string
 }
 
-func (de DataEnterprise) ReadAllWorks() ([]ResultWork, error) {
+type WorkData struct {
+	db *gorm.DB
+}
+
+func NewWorkData(db *gorm.DB) *WorkData {
+	return &WorkData{db: db}
+}
+
+func (ww WorkData) ReadAllWorks() ([]ResultWork, error) {
 
 	var works []ResultWork
-	result := de.db.Model(&Work{}).Select("works.id, services.name, services.cost, " +
+	result := ww.db.Model(&Work{}).Select("works.id, services.name, services.cost, " +
 		"workers.first_name, workers.last_name, workers.middle_name, workers.phone_number").
 		Joins("left join services on services.id = works.service_id").
 		Joins("left join workers on works.worker_id = workers.id").Scan(&works)
@@ -35,28 +44,28 @@ func (de DataEnterprise) ReadAllWorks() ([]ResultWork, error) {
 	return works, nil
 }
 
-func (de DataEnterprise) AddWork(workerId, serviceId int) (int, error) {
+func (ww WorkData) AddWork(workerId, serviceId int) (int, error) {
 	addWork := Work{
 		WorkerId:  workerId,
 		ServiceId: serviceId,
 	}
-	result := de.db.Create(&addWork)
+	result := ww.db.Create(&addWork)
 	if result.Error != nil {
 		return -1, fmt.Errorf("can`t create work to database: %w", result.Error)
 	}
 	return addWork.Id, nil
 }
 
-func (de DataEnterprise) UpdateWork(w Work) error {
-	result := de.db.Model(&w).Updates(w)
+func (ww WorkData) UpdateWork(w Work) error {
+	result := ww.db.Model(&w).Updates(w)
 	if result.Error != nil {
 		return fmt.Errorf("can`t update works by id = %d, erorr: %w", w.Id, result.Error)
 	}
 	return nil
 }
 
-func (de DataEnterprise) DeleteByIdWork(id int) error {
-	result := de.db.Delete(&Work{}, id)
+func (ww WorkData) DeleteByIdWork(id int) error {
+	result := ww.db.Delete(&Work{}, id)
 	if result.Error != nil {
 		return fmt.Errorf("can`t delete from works by id = %d, error: %w", id, result.Error)
 	}

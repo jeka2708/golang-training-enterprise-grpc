@@ -1,41 +1,48 @@
 package api
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/jeka2708/golang-training-enterprise/pkg/data"
+	"context"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/jeka2708/golang-training-enterprise-grpc/pkg/data"
+	pb "github.com/jeka2708/golang-training-enterprise-grpc/proto/go_proto"
+	"google.golang.org/grpc"
+	"gorm.io/gorm"
+	"log"
 )
 
-type dataAPI struct {
-	data *data.DataEnterprise
+func RegisterAllServices(server *grpc.Server, conn *gorm.DB) {
+	pb.RegisterDivisionServiceServer(server, NewDivisionServer(*data.NewDivisionData(conn)))
+	pb.RegisterRoleServiceServer(server, NewRoleServer(*data.NewRoleData(conn)))
+	pb.RegisterServiceServiceServer(server, NewServiceServer(*data.NewServiceData(conn)))
+	pb.RegisterClientServiceServer(server, NewClientServer(*data.NewClientData(conn)))
+	pb.RegisterWorkerServiceServer(server, NewWorkerServer(*data.NewWorkerData(conn)))
+	pb.RegisterWorkServiceServer(server, NewWorkServer(*data.NewWorkData(conn)))
+	pb.RegisterWorkClientServiceServer(server, NewWorkClientServer(*data.NewWorkClientData(conn)))
 }
 
-func ServeUserResource(r *mux.Router, data data.DataEnterprise) {
-	api := &dataAPI{data: &data}
-	r.HandleFunc("/clients", api.getAllClients).Methods("GET")
-	r.HandleFunc("/divisions", api.getAllDivision).Methods("GET")
-	r.HandleFunc("/roles", api.getAllRole).Methods("GET")
-	r.HandleFunc("/services", api.getAllServices).Methods("GET")
-	r.HandleFunc("/works", api.getAllWork).Methods("GET")
-	r.HandleFunc("/works-clients", api.getAllWorkClient).Methods("GET")
-	r.HandleFunc("/workers", api.getAllWorkers).Methods("GET")
-
-	r.HandleFunc("/create-client", api.CreateUser).Methods("POST")
-	r.HandleFunc("/create-division", api.CreateDivision).Methods("POST")
-	r.HandleFunc("/create-role", api.CreateRole).Methods("POST")
-	r.HandleFunc("/create-service", api.CreateService).Methods("POST")
-	r.HandleFunc("/create-work", api.CreateWork).Methods("POST")
-	r.HandleFunc("/create-work-clients", api.CreateWorkClient).Methods("POST")
-	r.HandleFunc("/create-worker", api.CreateWorker).Methods("POST")
-
-	r.HandleFunc("/delete-client", api.DeleteClient).Methods("POST")
-	r.HandleFunc("/delete-division", api.DeleteDivision).Methods("POST")
-	r.HandleFunc("/delete-role", api.DeleteRole).Methods("POST")
-	r.HandleFunc("/delete-service", api.DeleteService).Methods("POST")
-	r.HandleFunc("/delete-work", api.DeleteWork).Methods("POST")
-	r.HandleFunc("/delete-work-clients", api.DeleteWorkClient).Methods("POST")
-	r.HandleFunc("/delete-worker", api.DeleteWorker).Methods("POST")
-
-	r.HandleFunc("/update-client", api.UpdateClient).Methods("POST")
-	r.HandleFunc("/update-division", api.UpdateDivision).Methods("POST")
-	r.HandleFunc("/update-service", api.UpdateService).Methods("POST")
+func RegisterAllServiceHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) {
+	err := pb.RegisterDivisionServiceHandler(ctx, mux, conn)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = pb.RegisterRoleServiceHandler(ctx, mux, conn)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = pb.RegisterServiceServiceHandler(ctx, mux, conn)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = pb.RegisterClientServiceHandler(ctx, mux, conn)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = pb.RegisterWorkerServiceHandler(ctx, mux, conn)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = pb.RegisterWorkServiceHandler(ctx, mux, conn)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

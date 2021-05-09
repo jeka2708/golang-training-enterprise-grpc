@@ -1,0 +1,66 @@
+// you can generate go models by the following command:
+// protoc -I . workClient.proto --grpc-gateway_out . --go_out=plugins=grpc:.
+
+
+
+syntax = "proto3";
+
+option go_package = "/go_proto";
+
+package WorkClient;
+
+import "google/api/annotations.proto";
+
+service WorkClientService {
+  rpc ReadAllClient(ListWorkClientRequest) returns (ListWorkClientResponse) {
+    option(google.api.http) = {
+      get: "/api/v1/work-client"
+    };
+  }
+  rpc CreateWorkClient(DataWorkClient) returns (IdWorkClient) {
+    option(google.api.http) = {
+      post: "/api/v1/work-client"
+      body:"*"
+    };
+  }
+  rpc DeleteWorkClient(IdWorkClient) returns (StatusWorkClientResponse) {
+    option(google.api.http) = {
+      delete: "/api/v1/work-client/{id}"
+    };
+  }
+  rpc UpdateWorkClient(DataWorkClient) returns (StatusWorkClientResponse) {
+    option(google.api.http) = {
+      put: "/api/v1/work-client"
+      body: "*"
+    };
+  }
+}
+
+message DataWorkClient{
+  int64 Id = 1;
+  string FirstNameC = 2;
+  string LastNameC = 3;
+  string MiddleNameC = 4;
+  string PhoneNumberC = 5;
+  string FirstName = 6;
+  string LastName = 7;
+  string MiddleName = 8;
+  string PhoneNumber = 9;
+  string Name = 10;
+  string Cost = 11;
+  int64 ClientId = 12;
+  int64 WorkId = 13;
+}
+
+message ListWorkClientRequest {}
+
+message ListWorkClientResponse {
+  repeated DataWorkClient data = 1;
+}
+
+message IdWorkClient {
+  int64 id = 1;
+}
+message StatusWorkClientResponse {
+  string message = 1;
+}

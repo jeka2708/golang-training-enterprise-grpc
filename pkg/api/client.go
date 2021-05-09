@@ -1,88 +1,109 @@
 package api
 
 import (
-	"encoding/json"
-	"html/template"
-	"log"
-	"net/http"
-	"strconv"
-
-	"github.com/jeka2708/golang-training-enterprise/pkg/data"
+	"context"
+	"fmt"
+	"github.com/jeka2708/golang-training-enterprise-grpc/pkg/data"
+	pb "github.com/jeka2708/golang-training-enterprise-grpc/proto/go_proto"
+	log "github.com/sirupsen/logrus"
 )
 
-type pageData struct {
-	Title   string
-	Clients []data.Client
+type ClientServer struct {
+	data *data.ClientData
 }
 
-func (a dataAPI) getAllClients(writer http.ResponseWriter, request *http.Request) {
-	clients, err := a.data.ReadAllClients()
-	pD := pageData{
-		Title:   "Список клиентов",
-		Clients: clients,
-	}
+func (c ClientServer) ReadAllClient(ctx context.Context, request *pb.ListClientRequest) (*pb.ListClientResponse, error) {
+	cc, err := c.data.ReadAllClients()
 	if err != nil {
-		_, err := writer.Write([]byte("got an error when tried to get users"))
-		if err != nil {
-			log.Println(err)
-		}
+		log.Println(err)
 	}
-	tmpl, _ := template.ParseFiles("web/clients.html")
-	err = tmpl.Execute(writer, pD)
-}
-func (a dataAPI) CreateUser(writer http.ResponseWriter, request *http.Request) {
-	client := new(data.Client)
-	err := json.NewDecoder(request.Body).Decode(&client)
-	if err != nil {
-		log.Printf("failed reading JSON: %s\n", err)
-		writer.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	if client == nil {
-		log.Printf("failed empty JSON\n")
-		writer.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	_, err = a.data.AddClient(*client)
-	if err != nil {
-		log.Println("user hasn't been created")
-		writer.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	writer.WriteHeader(http.StatusCreated)
-}
-func (a dataAPI) DeleteClient(writer http.ResponseWriter, request *http.Request) {
-	client := new(data.Client)
 
-	if id, err := strconv.Atoi(request.FormValue("id")); err == nil {
-		client.Id = id
+	var list []*pb.DataClient
+	for _, t := range cc {
+
+		list = append(list, structClientToRes(t))
+
 	}
-	err := a.data.DeleteByIdClient(client.Id)
-	if err != nil {
-		log.Println("user hasn't been deleted")
-		writer.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	writer.WriteHeader(http.StatusCreated)
+
+	return &pb.ListClientResponse{Data: list}, nil
 }
-func (a dataAPI) UpdateClient(writer http.ResponseWriter, request *http.Request) {
-	client := new(data.Client)
-	err := json.NewDecoder(request.Body).Decode(&client)
+
+func (c ClientServer) CreateClient(ctx context.Context, client *pb.DataClient) (*pb.IdClient, error) {
+	var entity = data.Client{
+		FirstNameC:   client.FirstNameC,
+		LastNameC:    client.LastNameC,
+		MiddleNameC:  client.MiddleNameC,
+		PhoneNumberC: client.PhoneNumberC,
+	}
+	id, err := c.data.AddClient(entity)
 	if err != nil {
-		log.Printf("failed reading JSON: %s\n", err)
-		writer.WriteHeader(http.StatusBadRequest)
-		return
+		log.WithFields(log.Fields{
+			"client": entity,
+		}).Warningf("got an error when tried to create client: %s", err)
+		return &pb.IdClient{Id: -1}, fmt.Errorf("got an error when tried to create client: %w", err)
 	}
-	if client == nil {
-		log.Printf("failed empty JSON\n")
-		writer.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	err = a.data.UpdateClient(*client)
+	entity.Id = id
+	log.WithFields(log.Fields{
+		"client": entity,
+	}).Info("create client")
+	return &pb.IdClient{Id: int64(id)}, nil
+}
+
+func (c ClientServer) DeleteClient(ctx context.Context, client *pb.IdClient) (*pb.StatusClientResponse, error) {
+	var entity = new(data.Division)
+	entity.Id = int(client.Id)
+	err := c.data.DeleteByIdClient(entity.Id)
 	if err != nil {
-		log.Println("user hasn't been deleted")
-		writer.WriteHeader(http.StatusBadRequest)
-		return
+		log.WithFields(log.Fields{
+			"client": entity,
+		}).Warningf("got an error when tried to delete client: %s", err)
+		return &pb.StatusClientResponse{Message: "got an error when tried to delete client"},
+			fmt.Errorf("got an error when tried to delete division: %w", err)
 	}
-	writer.WriteHeader(http.StatusCreated)
+	log.WithFields(log.Fields{
+		"client": entity,
+	}).Info("client was delete")
+	return &pb.StatusClientResponse{Message: "client was delete"}, nil
+}
+
+func (c ClientServer) UpdateClient(ctx context.Context, client *pb.DataClient) (*pb.StatusClientResponse, error) {
+	var entity = data.Client{
+		FirstNameC:   client.FirstNameC,
+		LastNameC:    client.LastNameC,
+		MiddleNameC:  client.MiddleNameC,
+		PhoneNumberC: client.PhoneNumberC,
+	}
+	err := c.data.UpdateClient(entity)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"client": entity,
+		}).Warningf("got an error when tried to update client: %s", err)
+		return &pb.StatusClientResponse{Message: "got an error when tried to delete client"},
+			fmt.Errorf("got an error when tried to update division: %w", err)
+	}
+	log.WithFields(log.Fields{
+		"client": entity,
+	}).Info("client was update")
+	return &pb.StatusClientResponse{Message: "client was update"}, nil
+}
+
+func NewClientServer(d data.ClientData) *ClientServer {
+	return &ClientServer{data: &d}
+}
+func structClientToRes(data data.Client) *pb.DataClient {
+
+	id := data.Id
+
+	d := &pb.DataClient{
+		FirstNameC:   data.FirstNameC,
+		LastNameC:    data.LastNameC,
+		MiddleNameC:  data.MiddleNameC,
+		PhoneNumberC: data.PhoneNumberC,
+	}
+
+	if id != 0 {
+		d.Id = int64(id)
+	}
+
+	return d
 }
