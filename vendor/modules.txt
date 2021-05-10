@@ -1,5 +1,4 @@
 # github.com/DATA-DOG/go-sqlmock v1.5.0
-## explicit
 github.com/DATA-DOG/go-sqlmock
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
@@ -10,13 +9,12 @@ github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
 # github.com/grpc-ecosystem/grpc-gateway/v2 v2.4.0
-## explicit
 github.com/grpc-ecosystem/grpc-gateway/v2/internal/httprule
 github.com/grpc-ecosystem/grpc-gateway/v2/runtime
 github.com/grpc-ecosystem/grpc-gateway/v2/utilities
 # github.com/jackc/chunkreader/v2 v2.0.1
 github.com/jackc/chunkreader/v2
-# github.com/jackc/pgconn v1.8.0
+# github.com/jackc/pgconn v1.8.1
 github.com/jackc/pgconn
 github.com/jackc/pgconn/internal/ctxwatch
 github.com/jackc/pgconn/stmtcache
@@ -28,9 +26,9 @@ github.com/jackc/pgpassfile
 github.com/jackc/pgproto3/v2
 # github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b
 github.com/jackc/pgservicefile
-# github.com/jackc/pgtype v1.6.2
+# github.com/jackc/pgtype v1.7.0
 github.com/jackc/pgtype
-# github.com/jackc/pgx/v4 v4.10.1
+# github.com/jackc/pgx/v4 v4.11.0
 github.com/jackc/pgx/v4
 github.com/jackc/pgx/v4/internal/sanitize
 github.com/jackc/pgx/v4/stdlib
@@ -41,14 +39,12 @@ github.com/jinzhu/now
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
 # github.com/sirupsen/logrus v1.8.1
-## explicit
 github.com/sirupsen/logrus
 # github.com/stretchr/testify v1.7.0
-## explicit
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 github.com/stretchr/testify/suite
-# golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+# golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 golang.org/x/crypto/pbkdf2
 # golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4
 golang.org/x/net/http/httpguts
@@ -75,17 +71,12 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
-golang.org/x/xerrors
-golang.org/x/xerrors/internal
-# google.golang.org/genproto v0.0.0-20210504143626-3b2ad6ccc450
-## explicit
+# google.golang.org/genproto v0.0.0-20210506142907-4a47615972c2
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/api/httpbody
 google.golang.org/genproto/googleapis/rpc/status
 google.golang.org/genproto/protobuf/field_mask
 # google.golang.org/grpc v1.37.0
-## explicit
 google.golang.org/grpc
 google.golang.org/grpc/attributes
 google.golang.org/grpc/backoff
@@ -131,7 +122,6 @@ google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
 # google.golang.org/protobuf v1.26.0
-## explicit
 google.golang.org/protobuf/encoding/protojson
 google.golang.org/protobuf/encoding/prototext
 google.golang.org/protobuf/encoding/protowire
@@ -168,11 +158,9 @@ google.golang.org/protobuf/types/known/timestamppb
 google.golang.org/protobuf/types/known/wrapperspb
 # gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 gopkg.in/yaml.v3
-# gorm.io/driver/postgres v1.0.8
-## explicit
+# gorm.io/driver/postgres v1.1.0
 gorm.io/driver/postgres
 # gorm.io/gorm v1.21.9
-## explicit
 gorm.io/gorm
 gorm.io/gorm/callbacks
 gorm.io/gorm/clause

@@ -2,10 +2,11 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"github.com/jeka2708/golang-training-enterprise-grpc/pkg/data"
 	pb "github.com/jeka2708/golang-training-enterprise-grpc/proto/go_proto"
 	log "github.com/sirupsen/logrus"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type RoleServer struct {
@@ -33,6 +34,12 @@ func (r RoleServer) ReadAllRole(ctx context.Context, request *pb.ListRoleRequest
 }
 
 func (r RoleServer) DeleteRole(ctx context.Context, role *pb.IdRole) (*pb.StatusRoleResponse, error) {
+	if err := checkId(role.GetId()); err != nil {
+		log.WithFields(log.Fields{
+			"client": role,
+		}).Warningf("empty fields error: %s", err)
+		return &pb.StatusRoleResponse{Message: "empty fields error"}, err
+	}
 	var entity = new(data.Role)
 	entity.Id = int(role.Id)
 	err := r.data.DeleteByIdRole(entity.Id)
@@ -40,8 +47,14 @@ func (r RoleServer) DeleteRole(ctx context.Context, role *pb.IdRole) (*pb.Status
 		log.WithFields(log.Fields{
 			"division": entity,
 		}).Warningf("got an error when tried to delete Role: %s", err)
-		return &pb.StatusRoleResponse{Message: "got an error when tried to delete Role"},
-			fmt.Errorf("got an error when tried to delete Role: %w", err)
+
+		s := status.Newf(codes.Internal, "got an error when tried to delete client: %s, with error: %w", role, err)
+		errWithDetails, err := s.WithDetails(role)
+		if err != nil {
+			return &pb.StatusRoleResponse{Message: "got an error when tried to delete Role"},
+				status.Errorf(codes.Unknown, "can't covert status to status with details %v", s)
+		}
+		return &pb.StatusRoleResponse{Message: "got an error when tried to delete Role"}, errWithDetails.Err()
 	}
 	log.WithFields(log.Fields{
 		"Role": entity,

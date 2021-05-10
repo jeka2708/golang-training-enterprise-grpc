@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/jeka2708/golang-training-enterprise-grpc/pkg/data"
 	pb "github.com/jeka2708/golang-training-enterprise-grpc/proto/go_proto"
@@ -33,6 +35,12 @@ func (u DivisionServer) ReadAllDivision(ctx context.Context, division *pb.ListDi
 	return &pb.ListDivisionResponse{Data: list}, nil
 }
 func (u DivisionServer) CreateDivision(ctx context.Context, division *pb.DataDivision) (*pb.IdDivision, error) {
+	if err := checkDivisionRequest(division); err != nil {
+		log.WithFields(log.Fields{
+			"client": division,
+		}).Warningf("empty fields error: %s", err)
+		return &pb.IdDivision{Id: -1}, err
+	}
 	var entity = data.Division{
 		DivisionName: division.GetDivisionName(),
 	}
@@ -41,7 +49,14 @@ func (u DivisionServer) CreateDivision(ctx context.Context, division *pb.DataDiv
 		log.WithFields(log.Fields{
 			"division": entity,
 		}).Warningf("got an error when tried to create divisiion: %s", err)
-		return &pb.IdDivision{Id: -1}, fmt.Errorf("got an error when tried to create division: %w", err)
+
+		s := status.Newf(codes.Internal, "got an error when tried to create division: %s, with error: %w", division, err)
+		errWithDetails, err := s.WithDetails(division)
+		if err != nil {
+			return &pb.IdDivision{Id: -1}, status.Errorf(codes.Unknown, "can't covert status to status with details %v", s)
+		}
+		return &pb.IdDivision{Id: -1}, errWithDetails.Err()
+
 	}
 	entity.Id = id
 	log.WithFields(log.Fields{
@@ -51,6 +66,12 @@ func (u DivisionServer) CreateDivision(ctx context.Context, division *pb.DataDiv
 }
 
 func (u DivisionServer) DeleteDivision(ctx context.Context, division *pb.IdDivision) (*pb.StatusDivisionResponse, error) {
+	if err := checkId(division.GetId()); err != nil {
+		log.WithFields(log.Fields{
+			"client": division,
+		}).Warningf("empty fields error: %s", err)
+		return &pb.StatusDivisionResponse{Message: "empty fields error"}, err
+	}
 	var entity = new(data.Division)
 	entity.Id = int(division.Id)
 	err := u.data.DeleteByIdDivision(entity.Id)
@@ -58,8 +79,14 @@ func (u DivisionServer) DeleteDivision(ctx context.Context, division *pb.IdDivis
 		log.WithFields(log.Fields{
 			"division": entity,
 		}).Warningf("got an error when tried to delete divisiion: %s", err)
-		return &pb.StatusDivisionResponse{Message: "got an error when tried to delete division"},
-			fmt.Errorf("got an error when tried to delete division: %w", err)
+
+		s := status.Newf(codes.Internal, "got an error when tried to delete client: %s, with error: %w", division, err)
+		errWithDetails, err := s.WithDetails(division)
+		if err != nil {
+			return &pb.StatusDivisionResponse{Message: "got an error when tried to delete division"},
+				status.Errorf(codes.Unknown, "can't covert status to status with details %v", s)
+		}
+		return &pb.StatusDivisionResponse{Message: "got an error when tried to delete division"}, errWithDetails.Err()
 	}
 	log.WithFields(log.Fields{
 		"division": entity,
@@ -68,6 +95,18 @@ func (u DivisionServer) DeleteDivision(ctx context.Context, division *pb.IdDivis
 }
 
 func (u DivisionServer) UpdateDivision(ctx context.Context, division *pb.DataDivision) (*pb.StatusDivisionResponse, error) {
+	if err := checkId(division.GetId()); err != nil {
+		log.WithFields(log.Fields{
+			"client": division,
+		}).Warningf("empty fields error: %s", err)
+		return &pb.StatusDivisionResponse{Message: "empty fields error"}, err
+	}
+	if err := checkDivisionRequest(division); err != nil {
+		log.WithFields(log.Fields{
+			"client": division,
+		}).Warningf("empty fields error: %s", err)
+		return &pb.StatusDivisionResponse{Message: "empty fields error"}, err
+	}
 	var entity = data.Division{
 		Id:           int(division.Id),
 		DivisionName: division.GetDivisionName(),
@@ -99,4 +138,15 @@ func structDivisionToRes(data data.Division) *pb.DataDivision {
 	}
 
 	return d
+}
+func checkDivisionRequest(in *pb.DataDivision) error {
+	if in.GetDivisionName() == "" {
+		s := status.Newf(codes.InvalidArgument, "didn't specify the field {DivisionName}: %s", in.GetDivisionName())
+		errWithDetails, err := s.WithDetails(in)
+		if err != nil {
+			return status.Errorf(codes.Unknown, "can't covert status to status with details %v", s)
+		}
+		return errWithDetails.Err()
+	}
+	return nil
 }
