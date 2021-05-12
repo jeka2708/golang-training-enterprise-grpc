@@ -1,73 +1,167 @@
 package api
 
 import (
-	"encoding/json"
-	"html/template"
-	"log"
-	"net/http"
-
-	"github.com/jeka2708/golang-training-enterprise/pkg/data"
+	"context"
+	"github.com/jeka2708/golang-training-enterprise-grpc/pkg/data"
+	pb "github.com/jeka2708/golang-training-enterprise-grpc/proto/go_proto"
+	log "github.com/sirupsen/logrus"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
-type pageDataWork struct {
-	Title string
-	Works []data.ResultWork
+type WorkServer struct {
+	data *data.WorkData
 }
 
-func (a dataAPI) getAllWork(writer http.ResponseWriter, request *http.Request) {
-	w, err := a.data.ReadAllWorks()
-	pD := pageDataWork{
-		Title: "Список работ",
-		Works: w,
-	}
+func NewWorkServer(d data.WorkData) *WorkServer {
+	return &WorkServer{data: &d}
+}
+
+func (w WorkServer) ReadAllWork(ctx context.Context, request *pb.ListWorkRequest) (*pb.ListWorkResponse, error) {
+	dv, err := w.data.ReadAllWorks()
 	if err != nil {
-		_, err := writer.Write([]byte("got an error when tried to get works"))
+		log.Println(err)
+	}
+
+	var list []*pb.DataWork
+	for _, d := range dv {
+
+		list = append(list, structWorkToRes(d))
+
+	}
+
+	return &pb.ListWorkResponse{Data: list}, nil
+}
+
+func (w WorkServer) CreateWork(ctx context.Context, work *pb.DataWork) (*pb.IdWork, error) {
+	if err := checkWorkRequest(work); err != nil {
+		log.WithFields(log.Fields{
+			"work": work,
+		}).Warningf("empty fields error: %s", err)
+		return &pb.IdWork{Id: -1}, err
+	}
+	var entity = data.Work{
+		WorkerId:  int(work.WorkerId),
+		ServiceId: int(work.ServiceId),
+	}
+	id, err := w.data.AddWork(entity.WorkerId, entity.ServiceId)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"work": entity,
+		}).Warningf("got an error when tried to create work: %s", err)
+		s := status.Newf(codes.Internal, "got an error when tried to create work: %s, with error: %w", work, err)
+		errWithDetails, err := s.WithDetails(work)
 		if err != nil {
-			log.Println(err)
+			return &pb.IdWork{Id: -1}, status.Errorf(codes.Unknown, "can't covert status to status with details %v", s)
 		}
+		return &pb.IdWork{Id: -1}, errWithDetails.Err()
 	}
-	tmpl, _ := template.ParseFiles("web/work.html")
-	err = tmpl.Execute(writer, pD)
+	entity.Id = id
+	log.WithFields(log.Fields{
+		"work": entity,
+	}).Info("create work")
+	return &pb.IdWork{Id: int64(id)}, nil
 }
-func (a dataAPI) CreateWork(writer http.ResponseWriter, request *http.Request) {
-	w := new(data.Work)
-	err := json.NewDecoder(request.Body).Decode(&w)
+
+func (w WorkServer) DeleteWork(ctx context.Context, work *pb.IdWork) (*pb.StatusWorkResponse, error) {
+	if err := checkId(work.GetId()); err != nil {
+		log.WithFields(log.Fields{
+			"work": work,
+		}).Warningf("empty fields error: %s", err)
+		return &pb.StatusWorkResponse{Message: "empty fields error"}, err
+	}
+	var entity = new(data.Division)
+	entity.Id = int(work.Id)
+	err := w.data.DeleteByIdWork(entity.Id)
 	if err != nil {
-		log.Printf("failed reading JSON: %s\n", err)
-		writer.WriteHeader(http.StatusBadRequest)
-		return
+		log.WithFields(log.Fields{
+			"work": entity,
+		}).Warningf("got an error when tried to delete work: %s", err)
+		s := status.Newf(codes.Internal, "got an error when tried to delete client: %s, with error: %w", work, err)
+		errWithDetails, err := s.WithDetails(work)
+		if err != nil {
+			return &pb.StatusWorkResponse{Message: "got an error when tried to delete work"},
+				status.Errorf(codes.Unknown, "can't covert status to status with details %v", s)
+		}
+		return &pb.StatusWorkResponse{Message: "got an error when tried to delete work"}, errWithDetails.Err()
+
 	}
-	if w == nil {
-		log.Printf("failed empty JSON\n")
-		writer.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	_, err = a.data.AddWork(w.WorkerId, w.ServiceId)
-	if err != nil {
-		log.Println("work hasn't been created")
-		writer.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	writer.WriteHeader(http.StatusCreated)
+	log.WithFields(log.Fields{
+		"work": entity,
+	}).Info("work was delete")
+	return &pb.StatusWorkResponse{Message: "work was delete"}, nil
 }
-func (a dataAPI) DeleteWork(writer http.ResponseWriter, request *http.Request) {
-	w := new(data.Work)
-	err := json.NewDecoder(request.Body).Decode(&w)
+
+func (w WorkServer) UpdateWork(ctx context.Context, work *pb.DataWork) (*pb.StatusWorkResponse, error) {
+	if err := checkId(work.GetId()); err != nil {
+		log.WithFields(log.Fields{
+			"work": work,
+		}).Warningf("empty fields error: %s", err)
+		return &pb.StatusWorkResponse{Message: "empty fields error"}, err
+	}
+	if err := checkWorkRequest(work); err != nil {
+		log.WithFields(log.Fields{
+			"work": work,
+		}).Warningf("empty fields error: %s", err)
+		return &pb.StatusWorkResponse{Message: "empty fields error"}, err
+	}
+	var entity = data.Work{
+		WorkerId:  int(work.WorkerId),
+		ServiceId: int(work.ServiceId),
+	}
+	err := w.data.UpdateWork(entity)
 	if err != nil {
-		log.Printf("failed reading JSON: %s\n", err)
-		writer.WriteHeader(http.StatusBadRequest)
-		return
+		log.WithFields(log.Fields{
+			"work": entity,
+		}).Warningf("got an error when tried to update work: %s", err)
+		s := status.Newf(codes.Internal, "got an error when tried to update client: %s, with error: %w", work, err)
+		errWithDetails, err := s.WithDetails(work)
+		if err != nil {
+			return &pb.StatusWorkResponse{Message: "got an error when tried to update work"},
+				status.Errorf(codes.Unknown, "can't covert status to status with details %v", s)
+		}
+		return &pb.StatusWorkResponse{Message: "got an error when tried to update work"}, errWithDetails.Err()
 	}
-	if w == nil {
-		log.Printf("failed empty JSON\n")
-		writer.WriteHeader(http.StatusBadRequest)
-		return
+	log.WithFields(log.Fields{
+		"work": entity,
+	}).Info("work was update")
+	return &pb.StatusWorkResponse{Message: "work was update"}, nil
+}
+
+func structWorkToRes(data data.ResultWork) *pb.DataWork {
+
+	id := data.Id
+
+	d := &pb.DataWork{
+		FirstName:   data.FirstName,
+		LastName:    data.LastName,
+		MiddleName:  data.MiddleName,
+		PhoneNumber: data.PhoneNumber,
+		Name:        data.Name,
 	}
-	err = a.data.DeleteByIdWork(w.Id)
-	if err != nil {
-		log.Println("work hasn't been deleted")
-		writer.WriteHeader(http.StatusBadRequest)
-		return
+
+	if id != 0 {
+		d.Id = int64(id)
 	}
-	writer.WriteHeader(http.StatusCreated)
+
+	return d
+}
+func checkWorkRequest(in *pb.DataWork) error {
+	if in.GetWorkerId() == 0 {
+		s := status.Newf(codes.InvalidArgument, "didn't specify the field {WorkerId}: %s", in.GetName())
+		errWithDetails, err := s.WithDetails(in)
+		if err != nil {
+			return status.Errorf(codes.Unknown, "can't covert status to status with details %v", s)
+		}
+		return errWithDetails.Err()
+	}
+	if in.GetServiceId() == 0 {
+		s := status.Newf(codes.InvalidArgument, "didn't specify the field {ServiceId}: %s", in.GetName())
+		errWithDetails, err := s.WithDetails(in)
+		if err != nil {
+			return status.Errorf(codes.Unknown, "can't covert status to status with details %v", s)
+		}
+		return errWithDetails.Err()
+	}
+	return nil
 }

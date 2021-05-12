@@ -2,6 +2,7 @@ package data
 
 import (
 	"fmt"
+	"gorm.io/gorm"
 )
 
 type Division struct {
@@ -9,36 +10,44 @@ type Division struct {
 	DivisionName string
 }
 
-func (de DataEnterprise) ReadAllDivision() ([]Division, error) {
-	var Divisions []Division
-	result := de.db.Find(&Divisions)
+type DivisionData struct {
+	db *gorm.DB
+}
+
+func NewDivisionData(db *gorm.DB) *DivisionData {
+	return &DivisionData{db: db}
+}
+
+func (d DivisionData) ReadAllDivision() ([]Division, error) {
+	var divisions []Division
+	result := d.db.Find(&divisions)
 	if result.Error != nil {
 		return nil, fmt.Errorf("can`t read Divisions from database %w", result.Error)
 	}
-	return Divisions, nil
+	return divisions, nil
 }
 
-func (de DataEnterprise) AddDivision(divisionName string) (int, error) {
+func (d DivisionData) AddDivision(divisionName string) (int, error) {
 	addDivision := Division{
 		DivisionName: divisionName,
 	}
-	result := de.db.Create(&addDivision)
+	result := d.db.Create(&addDivision)
 	if result.Error != nil {
 		return -1, fmt.Errorf("can`t create Division to database: %w", result.Error)
 	}
 	return addDivision.Id, nil
 }
 
-func (de DataEnterprise) UpdateDivision(d Division) error {
-	result := de.db.Model(&d).Updates(&d)
+func (d DivisionData) UpdateDivision(dd Division) error {
+	result := d.db.Model(&d).Updates(&d)
 	if result.Error != nil {
-		return fmt.Errorf("can`t update Division by id = %d, erorr: %w", d.Id, result.Error)
+		return fmt.Errorf("can`t update Division by id = %d, erorr: %w", dd.Id, result.Error)
 	}
 	return nil
 }
 
-func (de DataEnterprise) DeleteByIdDivision(id int) error {
-	result := de.db.Delete(&Division{}, id)
+func (d DivisionData) DeleteByIdDivision(id int) error {
+	result := d.db.Delete(&Division{}, id)
 	if result.Error != nil {
 		return fmt.Errorf("can`t delete from Division by id = %d, error: %w", id, result.Error)
 	}

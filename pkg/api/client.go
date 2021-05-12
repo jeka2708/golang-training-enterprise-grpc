@@ -1,88 +1,194 @@
 package api
 
 import (
-	"encoding/json"
-	"html/template"
-	"log"
-	"net/http"
-	"strconv"
-
-	"github.com/jeka2708/golang-training-enterprise/pkg/data"
+	"context"
+	"github.com/jeka2708/golang-training-enterprise-grpc/pkg/data"
+	pb "github.com/jeka2708/golang-training-enterprise-grpc/proto/go_proto"
+	log "github.com/sirupsen/logrus"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
-type pageData struct {
-	Title   string
-	Clients []data.Client
+type ClientServer struct {
+	data *data.ClientData
 }
 
-func (a dataAPI) getAllClients(writer http.ResponseWriter, request *http.Request) {
-	clients, err := a.data.ReadAllClients()
-	pD := pageData{
-		Title:   "Список клиентов",
-		Clients: clients,
-	}
+func (c ClientServer) ReadAllClient(ctx context.Context, request *pb.ListClientRequest) (*pb.ListClientResponse, error) {
+	cc, err := c.data.ReadAllClients()
 	if err != nil {
-		_, err := writer.Write([]byte("got an error when tried to get users"))
+		log.Println(err)
+	}
+
+	var list []*pb.DataClient
+	for _, t := range cc {
+
+		list = append(list, structClientToRes(t))
+
+	}
+
+	return &pb.ListClientResponse{Data: list}, nil
+}
+
+func (c ClientServer) CreateClient(ctx context.Context, client *pb.DataClient) (*pb.IdClient, error) {
+	if err := checkClientRequest(client); err != nil {
+		log.WithFields(log.Fields{
+			"client": client,
+		}).Warningf("empty fields error: %s", err)
+		return &pb.IdClient{Id: -1}, err
+	}
+	var entity = data.Client{
+		FirstNameC:   client.FirstNameC,
+		LastNameC:    client.LastNameC,
+		MiddleNameC:  client.MiddleNameC,
+		PhoneNumberC: client.PhoneNumberC,
+	}
+	id, err := c.data.AddClient(entity)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"client": entity,
+		}).Warningf("got an error when tried to create client: %s", err)
+		s := status.Newf(codes.Internal, "got an error when tried to create account: %s, with error: %w", client, err)
+		errWithDetails, err := s.WithDetails(client)
 		if err != nil {
-			log.Println(err)
+			return &pb.IdClient{Id: -1}, status.Errorf(codes.Unknown, "can't covert status to status with details %v", s)
 		}
+		return &pb.IdClient{Id: -1}, errWithDetails.Err()
 	}
-	tmpl, _ := template.ParseFiles("web/clients.html")
-	err = tmpl.Execute(writer, pD)
+	entity.Id = id
+	log.WithFields(log.Fields{
+		"client": entity,
+	}).Info("create client")
+	return &pb.IdClient{Id: int64(id)}, nil
 }
-func (a dataAPI) CreateUser(writer http.ResponseWriter, request *http.Request) {
-	client := new(data.Client)
-	err := json.NewDecoder(request.Body).Decode(&client)
-	if err != nil {
-		log.Printf("failed reading JSON: %s\n", err)
-		writer.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	if client == nil {
-		log.Printf("failed empty JSON\n")
-		writer.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	_, err = a.data.AddClient(*client)
-	if err != nil {
-		log.Println("user hasn't been created")
-		writer.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	writer.WriteHeader(http.StatusCreated)
-}
-func (a dataAPI) DeleteClient(writer http.ResponseWriter, request *http.Request) {
-	client := new(data.Client)
 
-	if id, err := strconv.Atoi(request.FormValue("id")); err == nil {
-		client.Id = id
+func (c ClientServer) DeleteClient(ctx context.Context, client *pb.IdClient) (*pb.StatusClientResponse, error) {
+	if err := checkId(client.GetId()); err != nil {
+		log.WithFields(log.Fields{
+			"client": client,
+		}).Warningf("empty fields error: %s", err)
+		return &pb.StatusClientResponse{Message: "empty fields error"}, err
 	}
-	err := a.data.DeleteByIdClient(client.Id)
+	var entity = new(data.Division)
+	entity.Id = int(client.Id)
+	err := c.data.DeleteByIdClient(entity.Id)
 	if err != nil {
-		log.Println("user hasn't been deleted")
-		writer.WriteHeader(http.StatusBadRequest)
-		return
+		log.WithFields(log.Fields{
+			"client": entity,
+		}).Warningf("got an error when tried to delete client: %s", err)
+		s := status.Newf(codes.Internal, "got an error when tried to delete client: %s, with error: %w", client, err)
+		errWithDetails, err := s.WithDetails(client)
+		if err != nil {
+			return &pb.StatusClientResponse{Message: "got an error when tried to delete client"},
+				status.Errorf(codes.Unknown, "can't covert status to status with details %v", s)
+		}
+		return &pb.StatusClientResponse{Message: "got an error when tried to delete client"}, errWithDetails.Err()
 	}
-	writer.WriteHeader(http.StatusCreated)
+	log.WithFields(log.Fields{
+		"client": entity,
+	}).Info("client was delete")
+	return &pb.StatusClientResponse{Message: "client was delete"}, nil
 }
-func (a dataAPI) UpdateClient(writer http.ResponseWriter, request *http.Request) {
-	client := new(data.Client)
-	err := json.NewDecoder(request.Body).Decode(&client)
+
+func (c ClientServer) UpdateClient(ctx context.Context, client *pb.DataClient) (*pb.StatusClientResponse, error) {
+	if err := checkId(client.GetId()); err != nil {
+		log.WithFields(log.Fields{
+			"client": client,
+		}).Warningf("empty fields error: %s", err)
+		return &pb.StatusClientResponse{Message: "empty fields error"}, err
+	}
+	if err := checkClientRequest(client); err != nil {
+		log.WithFields(log.Fields{
+			"client": client,
+		}).Warningf("empty fields error: %s", err)
+		return &pb.StatusClientResponse{Message: "empty fields error"}, err
+	}
+
+	var entity = data.Client{
+		FirstNameC:   client.FirstNameC,
+		LastNameC:    client.LastNameC,
+		MiddleNameC:  client.MiddleNameC,
+		PhoneNumberC: client.PhoneNumberC,
+	}
+	err := c.data.UpdateClient(entity)
 	if err != nil {
-		log.Printf("failed reading JSON: %s\n", err)
-		writer.WriteHeader(http.StatusBadRequest)
-		return
+		log.WithFields(log.Fields{
+			"client": entity,
+		}).Warningf("got an error when tried to update client: %s", err)
+		s := status.Newf(codes.Internal, "got an error when tried to update client: %s, with error: %w", client, err)
+		errWithDetails, err := s.WithDetails(client)
+		if err != nil {
+			return &pb.StatusClientResponse{Message: "got an error when tried to update client"},
+				status.Errorf(codes.Unknown, "can't covert status to status with details %v", s)
+		}
+		return &pb.StatusClientResponse{Message: "got an error when tried to update client"}, errWithDetails.Err()
 	}
-	if client == nil {
-		log.Printf("failed empty JSON\n")
-		writer.WriteHeader(http.StatusBadRequest)
-		return
+	log.WithFields(log.Fields{
+		"client": entity,
+	}).Info("client was update")
+	return &pb.StatusClientResponse{Message: "client was update"}, nil
+}
+
+func NewClientServer(d data.ClientData) *ClientServer {
+	return &ClientServer{data: &d}
+}
+func structClientToRes(data data.Client) *pb.DataClient {
+
+	id := data.Id
+
+	d := &pb.DataClient{
+		FirstNameC:   data.FirstNameC,
+		LastNameC:    data.LastNameC,
+		MiddleNameC:  data.MiddleNameC,
+		PhoneNumberC: data.PhoneNumberC,
 	}
-	err = a.data.UpdateClient(*client)
-	if err != nil {
-		log.Println("user hasn't been deleted")
-		writer.WriteHeader(http.StatusBadRequest)
-		return
+
+	if id != 0 {
+		d.Id = int64(id)
 	}
-	writer.WriteHeader(http.StatusCreated)
+
+	return d
+}
+
+func checkClientRequest(in *pb.DataClient) error {
+	if in.GetFirstNameC() == "" {
+		s := status.Newf(codes.InvalidArgument, "didn't specify the field {FirstNameC}: %s", in.GetFirstNameC())
+		errWithDetails, err := s.WithDetails(in)
+		if err != nil {
+			return status.Errorf(codes.Unknown, "can't covert status to status with details %v", s)
+		}
+		return errWithDetails.Err()
+	}
+	if in.GetLastNameC() == "" {
+		s := status.Newf(codes.InvalidArgument, "didn't specify the field {LastNameC}: %s", in.GetLastNameC())
+		errWithDetails, err := s.WithDetails(in)
+		if err != nil {
+			return status.Errorf(codes.Unknown, "can't covert status to status with details %v", s)
+		}
+		return errWithDetails.Err()
+	}
+	if in.GetPhoneNumberC() == "" {
+		s := status.Newf(codes.InvalidArgument, "didn't specify the field {PhoneNumberC}: %s", in.GetPhoneNumberC())
+		errWithDetails, err := s.WithDetails(in)
+		if err != nil {
+			return status.Errorf(codes.Unknown, "can't covert status to status with details %v", s)
+		}
+		return errWithDetails.Err()
+	}
+	if in.GetMiddleNameC() == "" {
+		s := status.Newf(codes.InvalidArgument, "didn't specify the field {MiddleNameC}: %s", in.GetMiddleNameC())
+		errWithDetails, err := s.WithDetails(in)
+		if err != nil {
+			return status.Errorf(codes.Unknown, "can't covert status to status with details %v", s)
+		}
+		return errWithDetails.Err()
+	}
+	return nil
+}
+
+func checkId(id int64) error {
+	if id <= 0 {
+		s := status.Newf(codes.InvalidArgument, "didn't specify the field {Id}: %s", id)
+		return s.Err()
+	}
+	return nil
 }

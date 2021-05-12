@@ -1,73 +1,79 @@
 package api
 
 import (
-	"encoding/json"
-	"html/template"
-	"log"
-	"net/http"
-
-	"github.com/jeka2708/golang-training-enterprise/pkg/data"
+	"context"
+	"github.com/jeka2708/golang-training-enterprise-grpc/pkg/data"
+	pb "github.com/jeka2708/golang-training-enterprise-grpc/proto/go_proto"
+	log "github.com/sirupsen/logrus"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
-type pageDataRole struct {
-	Title string
-	Roles []data.ResultRoles
+type RoleServer struct {
+	data *data.RoleData
 }
 
-func (a dataAPI) getAllRole(writer http.ResponseWriter, request *http.Request) {
-	r, err := a.data.ReadAllRoles()
-	pD := pageDataRole{
-		Title: "Список должностей",
-		Roles: r,
-	}
+func NewRoleServer(r data.RoleData) *RoleServer {
+	return &RoleServer{data: &r}
+}
+
+func (r RoleServer) ReadAllRole(ctx context.Context, request *pb.ListRoleRequest) (*pb.ListRoleResponse, error) {
+	rl, err := r.data.ReadAllRoles()
 	if err != nil {
-		_, err := writer.Write([]byte("got an error when tried to get roles"))
+		log.Println(err)
+	}
+
+	var list []*pb.DataRole
+	for _, t := range rl {
+
+		list = append(list, structRoleToRes(t))
+
+	}
+
+	return &pb.ListRoleResponse{Data: list}, nil
+}
+
+func (r RoleServer) DeleteRole(ctx context.Context, role *pb.IdRole) (*pb.StatusRoleResponse, error) {
+	if err := checkId(role.GetId()); err != nil {
+		log.WithFields(log.Fields{
+			"client": role,
+		}).Warningf("empty fields error: %s", err)
+		return &pb.StatusRoleResponse{Message: "empty fields error"}, err
+	}
+	var entity = new(data.Role)
+	entity.Id = int(role.Id)
+	err := r.data.DeleteByIdRole(entity.Id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"division": entity,
+		}).Warningf("got an error when tried to delete Role: %s", err)
+
+		s := status.Newf(codes.Internal, "got an error when tried to delete client: %s, with error: %w", role, err)
+		errWithDetails, err := s.WithDetails(role)
 		if err != nil {
-			log.Println(err)
+			return &pb.StatusRoleResponse{Message: "got an error when tried to delete Role"},
+				status.Errorf(codes.Unknown, "can't covert status to status with details %v", s)
 		}
+		return &pb.StatusRoleResponse{Message: "got an error when tried to delete Role"}, errWithDetails.Err()
 	}
-	tmpl, _ := template.ParseFiles("web/role.html")
-	err = tmpl.Execute(writer, pD)
+	log.WithFields(log.Fields{
+		"Role": entity,
+	}).Info("Role was delete")
+	return &pb.StatusRoleResponse{Message: "Role was delete"}, nil
 }
-func (a dataAPI) CreateRole(writer http.ResponseWriter, request *http.Request) {
-	r := new(data.ResultRoles)
-	err := json.NewDecoder(request.Body).Decode(&r)
-	if err != nil {
-		log.Printf("failed reading JSON: %s\n", err)
-		writer.WriteHeader(http.StatusBadRequest)
-		return
+
+func structRoleToRes(data data.ResultRoles) *pb.DataRole {
+
+	id := data.Id
+
+	d := &pb.DataRole{
+		Name:         data.Name,
+		DivisionName: data.DivisionName,
 	}
-	if r == nil {
-		log.Printf("failed empty JSON\n")
-		writer.WriteHeader(http.StatusBadRequest)
-		return
+
+	if id != 0 {
+		d.Id = int64(id)
 	}
-	_, err = a.data.AddRole(r.Name, r.DivisionName)
-	if err != nil {
-		log.Println("role hasn't been created")
-		writer.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	writer.WriteHeader(http.StatusCreated)
-}
-func (a dataAPI) DeleteRole(writer http.ResponseWriter, request *http.Request) {
-	r := new(data.ResultRoles)
-	err := json.NewDecoder(request.Body).Decode(&r)
-	if err != nil {
-		log.Printf("failed reading JSON: %s\n", err)
-		writer.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	if r == nil {
-		log.Printf("failed empty JSON\n")
-		writer.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	err = a.data.DeleteByIdRole(r.Id)
-	if err != nil {
-		log.Println("role hasn't been deleted")
-		writer.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	writer.WriteHeader(http.StatusCreated)
+
+	return d
 }

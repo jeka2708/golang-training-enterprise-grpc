@@ -1,0 +1,47 @@
+version: '3.3'
+
+services:
+  db-enterprise:
+    image: pryby/db:latest
+    networks:
+      - enterprise-network
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=enterprise
+    ports:
+      - 5432:5432
+    container_name: db-enterprise
+  backend:
+    image: pryby/backend:latest
+    ports:
+      - 8080:8080
+    container_name: backend
+    environment:
+      - LISTEN=0.0.0.0:8080
+      - DB_USERS_HOST=db-enterprise
+      - DB_USERS_PORT=5432
+      - DB_USERS_USER=postgres
+      - DB_USERS_DBNAME=enterprise
+      - DB_USERS_PASSWORD=root
+      - DB_USERS_SSL=disable
+    depends_on:
+      - db-enterprise
+    networks:
+      - enterprise-network
+  gateway:
+    image: pryby/client:latest
+    ports:
+      - 8081:8081
+    container_name: gateway
+    depends_on:
+      - backend
+    environment:
+      - backend=backend:8080
+      - LISTEN=0.0.0.0:8081
+    networks:
+      - enterprise-network
+
+networks:
+  enterprise-network:
+    name: enterprise-network
