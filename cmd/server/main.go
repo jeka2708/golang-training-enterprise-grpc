@@ -15,20 +15,42 @@ import (
 	"time"
 )
 
-var (
-	listen   = os.Getenv("LISTEN")
-	host     = os.Getenv("DB_USERS_HOST")
-	port     = os.Getenv("DB_USERS_PORT")
-	user     = os.Getenv("DB_USERS_USER")
-	dbname   = os.Getenv("DB_USERS_DBNAME")
-	password = os.Getenv("DB_USERS_PASSWORD")
-	sslmode  = os.Getenv("DB_USERS_SSL")
-)
-
-func init() {
+func main() {
+	var listen = os.Getenv("LISTEN")
 	if listen == "" {
 		listen = ":8080"
 	}
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	ctx, cancel = context.WithTimeout(ctx, time.Second*30)
+	defer cancel()
+
+	conn, err := connectToDbWithTimeout(ctx)
+	if err != nil {
+		log.Fatalf("can't connect to database, error: %v", err)
+	}
+
+	listener, err := net.Listen("tcp", listen)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	server := grpc.NewServer()
+	api.RegisterAllServices(server, conn)
+	err = server.Serve(listener)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+func connectToDbWithTimeout(ctx context.Context) (*gorm.DB, error) {
+
+	var host = os.Getenv("DB_USERS_HOST")
+	var port = os.Getenv("DB_USERS_PORT")
+	var user = os.Getenv("DB_USERS_USER")
+	var dbname = os.Getenv("DB_USERS_DBNAME")
+	var password = os.Getenv("DB_USERS_PASSWORD")
+	var sslmode = os.Getenv("DB_USERS_SSL")
+
 	if host == "" {
 		host = "db-enterprise"
 	}
@@ -47,33 +69,6 @@ func init() {
 	if sslmode == "" {
 		sslmode = "disable"
 	}
-}
-
-func main() {
-	ctx := context.Background()
-	ctx, error := context.WithCancel(ctx)
-	ctx, error = context.WithTimeout(ctx, time.Second*30)
-	if error != nil {
-		log.Println(error)
-	}
-
-	listener, err := net.Listen("tcp", listen)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	server := grpc.NewServer()
-	conn, err := connectToDbWithTimeout(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-	api.RegisterAllServices(server, conn)
-
-	if err = server.Serve(listener); err != nil {
-		log.Fatal(err)
-	}
-}
-func connectToDbWithTimeout(ctx context.Context) (*gorm.DB, error) {
 	for {
 		time.Sleep(2 * time.Second)
 		conn, err := db.GetConnection(host, port, user, dbname, password, sslmode)

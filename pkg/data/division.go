@@ -19,12 +19,12 @@ func NewDivisionData(db *gorm.DB) *DivisionData {
 }
 
 func (d DivisionData) ReadAllDivision() ([]Division, error) {
-	var Divisions []Division
-	result := d.db.Find(&Divisions)
+	var divisions []Division
+	result := d.db.Find(&divisions)
 	if result.Error != nil {
 		return nil, fmt.Errorf("can`t read Divisions from database %w", result.Error)
 	}
-	return Divisions, nil
+	return divisions, nil
 }
 
 func (d DivisionData) AddDivision(divisionName string) (int, error) {

@@ -10,21 +10,15 @@ import (
 	"os"
 )
 
-var (
-	serverAddr = os.Getenv("backend")
-	listen     = os.Getenv("LISTEN")
-)
-
-func init() {
+func main() {
+	var serverAddr = os.Getenv("backend")
+	var listen = os.Getenv("LISTEN")
 	if serverAddr == "" {
 		serverAddr = "localhost:8080"
 	}
 	if listen == "" {
 		listen = "localhost:8081"
 	}
-}
-
-func main() {
 	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatal(err)
