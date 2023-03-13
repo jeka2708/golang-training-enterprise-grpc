@@ -23,16 +23,16 @@
 |```/create-work```|```POST```|create new work|```{"WorkerId":"2","ServiceId":"3"}```|
 |```/create-work-clients```|```POST```|create new work-clients|```{"FirstNameC":"First","LastNameC":"Last","MiddleNameC":"MiddleNameC","PhoneNumberC":"+37525333333"}```|
 |```/create-worker```|```POST```|create new worker|```{"FirstName":"First","LastName":"Last","MiddleName":"MiddleNameC","PhoneNumber":"+37525333333","RoleId":"3"}```|
-|```/delete-client```|```POST```|delete new client by id|```id```|
-|```/delete-division```|```POST```|delete new division by id|```id```|
-|```/delete-role```|```POST```|delete new role by id|```id```|
-|```/delete-service```|```POST```|delete new service by id|```id```|
-|```/delete-work```|```POST```|delete new work by id|```id```|
-|```/delete-work-clients```|```POST```|delete new work-clients by id|```id```|
-|```/delete-worker```|```POST```|delete new worker by id|```id```|
-|```/update-client```|```POST```|update client|```{"id":"1",FirstNameC":"First","LastNameC":"Last","MiddleNameC":"Middle","PhoneNumberC":"+37525333333"}```|
-|```/update-division```|```POST```|update division|```{"id":"1","DivisionName":"test"}```|
-|```/update-service```|```POST```|update service|```{"id":"1","Name":"test","Cost":"22"}```|
+|```/delete-client```|```DELETE```|delete new client by id|```id```|
+|```/delete-division```|```DELETE```|delete new division by id|```id```|
+|```/delete-role```|```DELETE```|delete new role by id|```id```|
+|```/delete-service```|```DELETE```|delete new service by id|```id```|
+|```/delete-work```|```DELETE```|delete new work by id|```id```|
+|```/delete-work-clients```|```DELETE```|delete new work-clients by id|```id```|
+|```/delete-worker```|```DELETE```|delete new worker by id|```id```|
+|```/update-client```|```PUT```|update client|```{"id":"1",FirstNameC":"First","LastNameC":"Last","MiddleNameC":"Middle","PhoneNumberC":"+37525333333"}```|
+|```/update-division```|```PUT```|update division|```{"id":"1","DivisionName":"test"}```|
+|```/update-service```|```PUT```|update service|```{"id":"1","Name":"test","Cost":"22"}```|
 
 ## Usage
 
